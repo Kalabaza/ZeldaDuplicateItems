@@ -61,8 +61,8 @@ static const command step[] = {
 	// Select item to duplicate
 	{ ZR,         5 },
 	{ NOTHING,   20 },
-	{ CROSS_UP,  30 },
-	{ NOTHING,   20 },
+	{ CROSS_UP,  40 },
+	{ NOTHING,   30 },
 
 	// Open the menu and do the bow swap
 	{ PLUS,       5 },
@@ -84,7 +84,7 @@ static const command step[] = {
 
 	// Close and open the menu quickly
 	{ PLUS,       2 },
-	{ NOTHING,    2 },
+	{ NOTHING,    3 },
 	{ PLUS,       2 },
 	{ NOTHING,   20 },
 	{ LEFT,       5 },
@@ -135,7 +135,7 @@ void SetupHardware(void) {
 	clock_prescale_set(clock_div_1);
 	// We can then initialize our hardware and peripherals, including the USB stack.
 
-	#ifdef ALERT_WHEN_DONE
+#ifdef ALERT_WHEN_DONE
 	// Both PORTD and PORTB will be used for the optional LED flashing and buzzer.
 	#warning LED and Buzzer functionality enabled. All pins on both PORTB and \
 PORTD will toggle when printing is done.
@@ -144,7 +144,7 @@ PORTD will toggle when printing is done.
                   //We'll just flash all pins on both ports since the UNO R3
 	DDRB  = 0xFF; //uses PORTB. Micro can use either or, but both give us 2 LEDs
 	PORTB =  0x0; //The ATmega328P on the UNO will be resetting, so unplug it?
-	#endif
+#endif
 	// The USB stack should be initialized last.
 	USB_Init();
 }
@@ -220,25 +220,18 @@ void HID_Task(void) {
 }
 
 typedef enum {
-	SYNC_CONTROLLER,
-	SYNC_POSITION,
+	SYNC,
 	BREATHE,
-	PROCESS,
-	CLEANUP,
-	DONE
+	PROCESS
 } State_t;
-State_t state = SYNC_CONTROLLER;
+State_t state = SYNC;
 
 #define ECHOES 2
 int echoes = 0;
 USB_JoystickReport_Input_t last_report;
 
-int report_count = 0;
-int xpos = 0;
-int ypos = 0;
 int bufindex = 0;
 int duration_count = 0;
-int portsval = 0;
 
 // Prepare the next report for the host.
 void GetNextReport(USB_JoystickReport_Input_t* const ReportData) {
@@ -261,17 +254,7 @@ void GetNextReport(USB_JoystickReport_Input_t* const ReportData) {
 	// States and moves management
 	switch (state)
 	{
-		case SYNC_CONTROLLER:
-			state = BREATHE;
-			break;
-		case SYNC_POSITION:
-			bufindex = 0;
-			ReportData->Button = 0;
-			ReportData->LX = STICK_CENTER;
-			ReportData->LY = STICK_CENTER;
-			ReportData->RX = STICK_CENTER;
-			ReportData->RY = STICK_CENTER;
-			ReportData->HAT = HAT_CENTER;
+		case SYNC:
 			state = BREATHE;
 			break;
 		case BREATHE:
@@ -280,70 +263,30 @@ void GetNextReport(USB_JoystickReport_Input_t* const ReportData) {
 		case PROCESS:
 			switch (step[bufindex].button)
 			{
-				case UP:
-					ReportData->LY = STICK_MIN;				
-					break;
-				case LEFT:
-					ReportData->LX = STICK_MIN;				
-					break;
-				case DOWN:
-					ReportData->LY = STICK_MAX;				
-					break;
-				case RIGHT:
-					ReportData->LX = STICK_MAX;				
-					break;
-				case A:
-					ReportData->Button |= SWITCH_A;
-					break;
-				case B:
-					ReportData->Button |= SWITCH_B;
-					break;
-				case L:
-					ReportData->Button |= SWITCH_L;
-					break;
-				case ZL:
-					ReportData->Button |= SWITCH_ZL;
-					break;
-				case R:
-					ReportData->Button |= SWITCH_R;
-					break;
-				case ZR:
-					ReportData->Button |= SWITCH_ZR;
-					break;
-				case X:
-					ReportData->Button |= SWITCH_X;
-					break;
-				case Y:
-					ReportData->Button |= SWITCH_Y;
-					break;
-				case PLUS:
-					ReportData->Button |= SWITCH_PLUS;
-					break;
-				case MINUS:
-					ReportData->Button |= SWITCH_MINUS;
-					break;
-				case CROSS_UP:
-					ReportData->HAT = HAT_TOP;
-					break;
-				case CROSS_LEFT:
-					ReportData->HAT = HAT_LEFT;
-					break;
-				case CROSS_RIGHT:
-					ReportData->HAT = HAT_RIGHT;
-					break;
-				case CROSS_DOWN:
-					ReportData->HAT = HAT_BOTTOM;
-					break;
-				case TRIGGERS:
-					ReportData->Button |= SWITCH_L | SWITCH_R;
-					break;
-				default:
-					ReportData->LX = STICK_CENTER;
-					ReportData->LY = STICK_CENTER;
-					ReportData->RX = STICK_CENTER;
-					ReportData->RY = STICK_CENTER;
-					ReportData->HAT = HAT_CENTER;
-					break;
+				case UP:			ReportData->LY = STICK_MIN;					break;
+				case LEFT:			ReportData->LX = STICK_MIN;					break;
+				case DOWN:			ReportData->LY = STICK_MAX;					break;
+				case RIGHT:			ReportData->LX = STICK_MAX;					break;
+				case A:				ReportData->Button |= SWITCH_A;				break;
+				case B:				ReportData->Button |= SWITCH_B;				break;
+				case X:				ReportData->Button |= SWITCH_X;				break;
+				case Y:				ReportData->Button |= SWITCH_Y;				break;
+				case L:				ReportData->Button |= SWITCH_L;				break;
+				case ZL:			ReportData->Button |= SWITCH_ZL;			break;
+				case R:				ReportData->Button |= SWITCH_R;				break;
+				case ZR:			ReportData->Button |= SWITCH_ZR;			break;
+				case PLUS:			ReportData->Button |= SWITCH_PLUS;			break;
+				case MINUS:			ReportData->Button |= SWITCH_MINUS;			break;
+				case CROSS_UP:		ReportData->HAT = HAT_TOP;					break;
+				case CROSS_LEFT:	ReportData->HAT = HAT_LEFT;					break;
+				case CROSS_RIGHT:	ReportData->HAT = HAT_RIGHT;				break;
+				case CROSS_DOWN:	ReportData->HAT = HAT_BOTTOM;				break;
+				case TRIGGERS:		ReportData->Button |= SWITCH_L | SWITCH_R;	break;
+				default:			ReportData->LX = STICK_CENTER;
+									ReportData->LY = STICK_CENTER;
+									ReportData->RX = STICK_CENTER;
+									ReportData->RY = STICK_CENTER;
+									ReportData->HAT = HAT_CENTER;				break;
 			}
 
 			duration_count++;
@@ -364,17 +307,6 @@ void GetNextReport(USB_JoystickReport_Input_t* const ReportData) {
 				ReportData->HAT = HAT_CENTER;
 			}
 			break;
-		case CLEANUP:
-			state = DONE;
-			break;
-		case DONE:
-#ifdef ALERT_WHEN_DONE
-			portsval = ~portsval;
-			PORTD = portsval; //flash LED(s) and sound buzzer if attached
-			PORTB = portsval;
-			_delay_ms(250);
-#endif
-			return;
 	}
 
 	// Prepare to echo this report
