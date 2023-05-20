@@ -32,10 +32,15 @@ typedef enum {
 	A,
 	B,
 	L,
+	ZL,
 	R,
+	ZR,
 	PLUS,
 	MINUS,
-	THROW,
+	CROSS_UP,
+	CROSS_LEFT,
+	CROSS_RIGHT,
+	CROSS_DOWN,
 	NOTHING,
 	TRIGGERS
 } Buttons_t;
@@ -53,54 +58,57 @@ static const command step[] = {
 	{ TRIGGERS,   5 },
 	{ NOTHING,  150 },
 	{ A,          5 },
-	{ NOTHING,  250 },
+	{ NOTHING,  150 },
 
-	// Flying to front of daycare
-	{ X,         5 },
-	{ NOTHING,  100 },
-	{ DOWN,      20 },
-	{ RIGHT,     50 }, 
-	{ A,         5 }, 
-	{ NOTHING,  100 },
-	{ A,          5 },
-	{ NOTHING,  100 },
-	{ A,          5 },
-	{ NOTHING,  100 },
+	// Select item to duplicate
+	{ ZR,         5 },
+	{ NOTHING,   20 },
+	{ CROSS_UP,  30 },
+	{ NOTHING,   20 },
 
-	// Walking back to get egg and putting it in party
-	{ DOWN,     100 },
+	// Open the menu and do the bow swap
+	{ PLUS,       5 },
+	{ NOTHING,   20 },
 	{ LEFT,       5 },
+	{ NOTHING,   20 },
 	{ A,          5 },
-	{ NOTHING,  100 },
-    { A,          5 },
-	{ NOTHING,  200 },
-	{ A,          5 },
-	{ NOTHING,  100 },
-	{ A,          5 },
-	{ NOTHING,  100 },
-	{ A,          5 },
-	{ NOTHING,  100 },
+	{ NOTHING,   20 },
 	{ DOWN,       5 },
-	{ NOTHING,  100 },
+	{ NOTHING,   20 },
 	{ A,          5 },
-	{ NOTHING,  100 },
+	{ NOTHING,   20 },
+	{ RIGHT,      5 },
+	{ NOTHING,   20 },
 	{ A,          5 },
-	{ NOTHING,  200 },
+	{ NOTHING,   20 },
 	{ A,          5 },
-	{ NOTHING,  100 },
+	{ NOTHING,   20 },
 
-	//Getting on bike, moving up and to the right, then start looping
-	{ PLUS,       5 },
-	{ UP_RIGHT, 150 },
-	{ UP_LEFT, 1000 },
+	// Close and open the menu quickly
+	{ PLUS,       2 },
+	{ NOTHING,    2 },
+	{ PLUS,       2 },
+	{ NOTHING,   20 },
+	{ LEFT,       5 },
+	{ NOTHING,   20 },
 	{ A,          5 },
-    { NOTHING, 1000 },
+	{ NOTHING,   20 },
+	{ DOWN,       5 },
+	{ NOTHING,   20 },
 	{ A,          5 },
-	{ NOTHING,  200 },
-	{ B,          5 },
-	{ UP_LEFT, 1500 },
+	{ NOTHING,   20 },
 	{ PLUS,       5 },
-	{ NOTHING,  100 }
+	{ NOTHING,   20 },
+
+	// Take the bows from the ground
+	{ DOWN,       5 },
+	{ NOTHING,   20 },
+	{ A,          5 },
+	{ NOTHING,   20 },
+	{ A,          5 },
+	{ NOTHING,   20 },
+	{ UP,         5 },
+	{ NOTHING,   20 },
 };
 
 // Main entry point.
@@ -261,32 +269,6 @@ void GetNextReport(USB_JoystickReport_Input_t* const ReportData) {
 			state = BREATHE;
 			break;
 
-		// case SYNC_CONTROLLER:
-		// 	if (report_count > 550)
-		// 	{
-		// 		report_count = 0;
-		// 		state = SYNC_POSITION;
-		// 	}
-		// 	else if (report_count == 250 || report_count == 300 || report_count == 325)
-		// 	{
-		// 		ReportData->Button |= SWITCH_L | SWITCH_R;
-		// 	}
-		// 	else if (report_count == 350 || report_count == 375 || report_count == 400)
-		// 	{
-		// 		ReportData->Button |= SWITCH_A;
-		// 	}
-		// 	else
-		// 	{
-		// 		ReportData->Button = 0;
-		// 		ReportData->LX = STICK_CENTER;
-		// 		ReportData->LY = STICK_CENTER;
-		// 		ReportData->RX = STICK_CENTER;
-		// 		ReportData->RY = STICK_CENTER;
-		// 		ReportData->HAT = HAT_CENTER;
-		// 	}
-		// 	report_count++;
-		// 	break;
-
 		case SYNC_POSITION:
 			bufindex = 0;
 
@@ -345,8 +327,20 @@ void GetNextReport(USB_JoystickReport_Input_t* const ReportData) {
 					ReportData->Button |= SWITCH_B;
 					break;
 
+				case L:
+					ReportData->Button |= SWITCH_L;
+					break;
+				
+				case ZL:
+					ReportData->Button |= SWITCH_ZL;
+					break;
+
 				case R:
 					ReportData->Button |= SWITCH_R;
+					break;
+
+				case ZR:
+					ReportData->Button |= SWITCH_ZR;
 					break;
 
 				case X:
@@ -365,10 +359,21 @@ void GetNextReport(USB_JoystickReport_Input_t* const ReportData) {
 					ReportData->Button |= SWITCH_MINUS;
 					break;
 
-				/*case THROW:
-					ReportData->LY = STICK_MIN;				
-					ReportData->Button |= SWITCH_R;
-					break;*/
+				case CROSS_UP:
+					ReportData->HAT = HAT_TOP;
+					break;
+
+				case CROSS_LEFT:
+					ReportData->HAT = HAT_LEFT;
+					break;
+
+				case CROSS_RIGHT:
+					ReportData->HAT = HAT_RIGHT;
+					break;
+
+				case CROSS_DOWN:
+					ReportData->HAT = HAT_BOTTOM;
+					break;
 
 				case TRIGGERS:
 					ReportData->Button |= SWITCH_L | SWITCH_R;

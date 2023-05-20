@@ -1,0 +1,13 @@
+# File that is flashed in the Arduino UNO
+Joystick.hex
+
+# Intermediary files produced during the compilation
+Joystick.bin
+Joystick.elf
+Joystick.eep
+Joystick.lss
+Joystick.map
+Joystick.sym
+
+# Folder with the rest of the obj files
+obj/
